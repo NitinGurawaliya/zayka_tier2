@@ -23,10 +23,30 @@ interface ManageCustomersProps {
 
 export default function ManageCustomers({ customers = [] }: ManageCustomersProps) {
   const [customerData, setCustomerData] = useState<Customer[]>(customers)
+  const [popupEnabled, setPopupEnabled] = useState<boolean | null>(null)
+  const [popupSaving, setPopupSaving] = useState(false)
 
   useEffect(() => {
     setCustomerData(customers);
   }, [customers]);
+
+  useEffect(() => {
+    // Fetch current popup setting for this restaurant owner
+    const loadSetting = async () => {
+      try {
+        const res = await fetch("/api/restaurant/settings/customer-popup", {
+          credentials: "include",
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setPopupEnabled(!!data.enabled)
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    loadSetting()
+  }, [])
 
   const [searchTerm, setSearchTerm] = useState("")
   const [sortField, setSortField] = useState<keyof Customer | null>(null)
@@ -97,7 +117,35 @@ export default function ManageCustomers({ customers = [] }: ManageCustomersProps
               <CardTitle>Customer Management</CardTitle>
               <CardDescription>View and contact your restaurant customers.</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Customer details popup on menu</span>
+                <Button
+                  variant={popupEnabled ? "default" : "outline"}
+                  size="sm"
+                  disabled={popupEnabled === null || popupSaving}
+                  onClick={async () => {
+                    if (popupEnabled === null) return
+                    const next = !popupEnabled
+                    setPopupSaving(true)
+                    try {
+                      const res = await fetch("/api/restaurant/settings/customer-popup", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ enabled: next }),
+                      })
+                      if (res.ok) {
+                        setPopupEnabled(next)
+                      }
+                    } finally {
+                      setPopupSaving(false)
+                    }
+                  }}
+                >
+                  {popupEnabled ? "ON" : "OFF"}
+                </Button>
+              </div>
               <Badge variant="outline" className="w-fit">
                 {filteredCustomers.length} Customers
               </Badge>

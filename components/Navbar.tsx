@@ -2,28 +2,49 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, UserIcon } from "lucide-react";
+import { UserIcon } from "lucide-react";
+import FeedbackDialog from "@/components/FeedbackDialog";
+import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
-  id:string
+  id?: number
   restaurantName: string;
   logo: string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ restaurantName, logo }) => {
+export const Navbar: React.FC<NavbarProps> = ({ id, restaurantName, logo }) => {
   return (
     <nav className="bg-white w-full border-b-2 p-1 shadow-xl border-gray-200 dark:bg-gray-900 dark:border-gray-700">
     <div className="w-full flex items-center justify-between px-1 py-1">
       <div className="flex items-center space-x-1">
-        <img src={logo} className="h-14 w-14" alt="Restaurant Logo" />
+        {logo ? (
+          <img src={logo} className="h-14 w-14 object-cover" alt="Restaurant Logo" />
+        ) : (
+          <div className="h-14 w-14 rounded bg-gray-200" />
+        )}
         <span className="text-xl font-semibold dark:text-white">{restaurantName}</span>
       </div>
-      <div className="border-2 border-gray-200    p-1 rounded-full">
-              <Avatar>
-                <AvatarImage />
-                <AvatarFallback> <UserIcon /></AvatarFallback>
-              </Avatar>
-              </div>
+      <div className="flex items-center gap-2">
+        {typeof id === "number" && (
+          <FeedbackDialog
+            restaurantId={id}
+            restaurantName={restaurantName}
+            trigger={
+              <Button variant="outline" size="sm">
+                Feedback
+              </Button>
+            }
+          />
+        )}
+        <div className="border-2 border-gray-200 p-1 rounded-full">
+          <Avatar>
+            <AvatarImage />
+            <AvatarFallback>
+              <UserIcon />
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      </div>
     </div>
   </nav>
   );
@@ -35,7 +56,11 @@ export const Dashboard_Navbar: React.FC<NavbarProps> = ({ restaurantName, logo }
     <nav className="bg-white w-full border-b-2 p-1 shadow-xl border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       <div className="w-full flex items-center justify-between px-2 py-2">
         <div className="flex items-center space-x-3">
-          <img src={logo} className="h-12 w-12" alt="Restaurant Logo" />
+          {logo ? (
+            <img src={logo} className="h-12 w-12 object-cover" alt="Restaurant Logo" />
+          ) : (
+            <div className="h-12 w-12 rounded bg-gray-200" />
+          )}
           <span className="text-2xl font-semibold dark:text-white">{restaurantName}</span>
         </div>
         {/* <div className="border-2 border-gray-200    p-2 rounded-full">

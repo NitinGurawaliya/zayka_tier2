@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import axios, { AxiosError } from "axios";
-import { REQUEST_URL } from "@/config";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const RestaurantOnboardingForm = () => {
+    const router = useRouter();
     const [restaurantName, setRestaurantName] = useState("");
     const [subdomain, setSubdomain] = useState("");
     const [subdomainError, setSubdomainError] = useState("");
@@ -84,6 +85,10 @@ const RestaurantOnboardingForm = () => {
             });
 
             setMessage("Restaurant details submitted successfully!");
+            // Onboarding complete -> go directly to dashboard
+            setTimeout(() => {
+                router.push("/restaurant/dashboard");
+            }, 500);
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
                 // Handle Axios error
@@ -171,6 +176,7 @@ const RestaurantOnboardingForm = () => {
                     onChange={handleFileChange}
                     className="w-full p-3 border border-gray-300 rounded-md"
                 />
+                <p className="text-xs text-gray-500 -mt-2">Restaurant logo is optional.</p>
                 <input
                     type="text"
                     name="instagram"

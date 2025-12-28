@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useMemo, useState } from "react";
-import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -27,20 +26,19 @@ export default function FeedbackDialog({
   trigger,
 }: FeedbackDialogProps) {
   const [open, setOpen] = useState(false);
-  const [stars, setStars] = useState<number>(0);
+  const [rating, setRating] = useState<number>(0);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
 
   const title = useMemo(() => {
-    if (!restaurantName) return "Feedback";
-    return `${restaurantName} के लिए Feedback`;
+    return "Give us your feedback";
   }, [restaurantName]);
 
   const submit = async () => {
-    if (!stars) {
-      setError("कृपया rating चुनें (1 से 5).");
+    if (!rating) {
+      setError("Please select a rating.");
       return;
     }
 
@@ -54,26 +52,34 @@ export default function FeedbackDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           restaurantId,
-          stars,
+          stars: rating,
           message: message.trim() ? message.trim() : undefined,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data?.msg || "Feedback submit नहीं हो पाया.");
+        throw new Error(data?.msg || "Could not submit feedback.");
       }
 
-      setSuccess("धन्यवाद! आपका feedback submit हो गया।");
-      setStars(0);
+      setSuccess("Thanks! Your feedback has been submitted.");
+      setRating(0);
       setMessage("");
       setTimeout(() => setOpen(false), 800);
     } catch (e: any) {
-      setError(e?.message || "Feedback submit नहीं हो पाया.");
+      setError(e?.message || "Could not submit feedback.");
     } finally {
       setLoading(false);
     }
   };
+
+  const options = [
+    { value: 1, emoji: "😭", label: "Dissatisfied" },
+    { value: 2, emoji: "😟", label: "" },
+    { value: 3, emoji: "😐", label: "" },
+    { value: 4, emoji: "😊", label: "" },
+    { value: 5, emoji: "🤩", label: "Satisfied" },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -84,49 +90,57 @@ export default function FeedbackDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            अपनी rating और छोटा सा message शेयर करें।
+            What was your experience while using product?
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setStars(n)}
-                className="p-1"
-                aria-label={`${n} स्टार`}
-              >
-                <Star
-                  className={
-                    n <= stars
-                      ? "h-6 w-6 fill-yellow-400 text-yellow-400"
-                      : "h-6 w-6 text-gray-300"
-                  }
-                />
-              </button>
-            ))}
-            <span className="ml-2 text-sm text-gray-600">{stars || 0}/5</span>
+        <div className="space-y-4">
+          <div className="grid grid-cols-5 gap-3">
+            {options.map((o) => {
+              const selected = rating === o.value;
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => setRating(o.value)}
+                  className={[
+                    "h-16 rounded-xl flex items-center justify-center bg-gray-50 border transition",
+                    selected ? "border-blue-500 ring-2 ring-blue-200 bg-white" : "border-gray-200 hover:border-gray-300",
+                  ].join(" ")}
+                  aria-label={`rating-${o.value}`}
+                >
+                  <span className="text-3xl">{o.emoji}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-500 px-1">
+            <span>Dissatisfied</span>
+            <span>Satisfied</span>
           </div>
 
-          <Textarea
-            placeholder="Message (optional)"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="min-h-[110px]"
-          />
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-gray-900">
+              Write your feedback <span className="text-gray-500 font-normal">(optional)</span>
+            </div>
+            <Textarea
+              placeholder="Please write here"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="min-h-[140px]"
+            />
+          </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
           {success && <p className="text-sm text-green-600">{success}</p>}
         </div>
 
         <DialogFooter>
-          <Button onClick={submit} disabled={loading}>
+          <Button onClick={submit} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700">
             {loading ? "Submitting..." : "Submit"}
           </Button>
         </DialogFooter>

@@ -10,9 +10,17 @@ interface NavbarProps {
   id?: number
   restaurantName: string;
   logo: string;
+  showUserIcon?: boolean;
+  feedbackButtonVariant?: "outline" | "black";
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ id, restaurantName, logo }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  id,
+  restaurantName,
+  logo,
+  showUserIcon = true,
+  feedbackButtonVariant = "outline",
+}) => {
   return (
     <nav className="bg-white w-full border-b-2 p-1 shadow-xl border-gray-200 dark:bg-gray-900 dark:border-gray-700">
     <div className="w-full flex items-center justify-between px-1 py-1">
@@ -30,20 +38,28 @@ export const Navbar: React.FC<NavbarProps> = ({ id, restaurantName, logo }) => {
             restaurantId={id}
             restaurantName={restaurantName}
             trigger={
-              <Button variant="outline" size="sm">
-                Feedback
-              </Button>
+              feedbackButtonVariant === "black" ? (
+                <Button size="sm" className="bg-black text-white hover:bg-black/90">
+                  Feedback
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm">
+                  Feedback
+                </Button>
+              )
             }
           />
         )}
-        <div className="border-2 border-gray-200 p-1 rounded-full">
-          <Avatar>
-            <AvatarImage />
-            <AvatarFallback>
-              <UserIcon />
-            </AvatarFallback>
-          </Avatar>
-        </div>
+        {showUserIcon && (
+          <div className="border-2 border-gray-200 p-1 rounded-full">
+            <Avatar>
+              <AvatarImage />
+              <AvatarFallback>
+                <UserIcon />
+              </AvatarFallback>
+            </Avatar>
+          </div>
+        )}
       </div>
     </div>
   </nav>

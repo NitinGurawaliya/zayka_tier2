@@ -55,33 +55,44 @@ export async function POST(req:NextRequest) {
     try {
         
         const formData = await req.formData();
-        const file = formData.get("image") as File;
-
-        if(!file){
-            return NextResponse.json({msg:"No image provided "},{status:500})
+        const files =
+            (formData.getAll("images").filter((f) => f instanceof File) as File[]) ||
+            [];
+        const single = formData.get("image");
+        if (files.length === 0 && single instanceof File) {
+            files.push(single);
         }
 
-        const buffer = await file.arrayBuffer();
-        const base64String = Buffer.from(buffer).toString("base64");
+        if (files.length === 0) {
+            return NextResponse.json({ msg: "No image provided" }, { status: 400 });
+        }
 
-        const uploadResponse = await cloudinary.uploader.upload(`data:image/jpeg;base64,${base64String}`, {
-            folder: "dishes_image",
-            public_id: file.name.split(".")[0],
-        });
+        const created = [];
+        for (const file of files) {
+            const buffer = await file.arrayBuffer();
+            const base64String = Buffer.from(buffer).toString("base64");
 
-        const imageUrl = uploadResponse.secure_url;
+            const uploadResponse = await cloudinary.uploader.upload(
+                `data:image/jpeg;base64,${base64String}`,
+                {
+                    folder: "dishes_image",
+                    public_id: file.name.split(".")[0],
+                }
+            );
 
-        const galleryimages = await prisma.restaurantGallery.create({
-            data:{
-                restaurantId:parseInt(restaurantId),
-                imageUrl
+            const imageUrl = uploadResponse.secure_url;
 
-            }
-        })
+            const galleryImage = await prisma.restaurantGallery.create({
+                data: {
+                    restaurantId: parseInt(restaurantId),
+                    imageUrl,
+                },
+            });
 
-        console.log("this is image",imageUrl)
+            created.push(galleryImage);
+        }
 
-        return NextResponse.json({galleryimages},{status:200})
+        return NextResponse.json({ galleryImages: created }, { status: 200 });
 
         
     } catch (error) {

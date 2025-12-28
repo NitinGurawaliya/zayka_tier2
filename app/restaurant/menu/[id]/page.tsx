@@ -9,13 +9,13 @@
     import { Button } from "@/components/ui/button"
     import { ArrowBigDown, ChefHatIcon, PencilIcon, Search } from "lucide-react"
     import { RatingDialog } from "@/components/rating-dialog"
-    import Navbar from "@/components/menu-navbar"
+    import { Navbar } from "@/components/Navbar"
     import AboutUsComponent from "@/components/about-us"
     import TabsComponent from "@/components/menu-navbar"
     import RestaurantGallery from "@/components/image-gallery"
 import BackToTop from "@/components/back-to-top"
 import AnnouncementList from "@/components/updates-section"
-import FormModal from "@/components/OptFormModal"
+import RegistrationPopup from "@/components/RegistrationPopup"
 
     interface RestaurantDetails {
       restaurantName: string
@@ -26,6 +26,7 @@ import FormModal from "@/components/OptFormModal"
       instagram:string
       logo: string
       id: number
+      customerDetailsPopupEnabled?: boolean
     }
 
     interface GalleryImages {
@@ -81,15 +82,6 @@ import FormModal from "@/components/OptFormModal"
 
       const dishesContainerRef = useRef<HTMLDivElement>(null)
       const categoryBarRef = useRef<HTMLDivElement>(null)
-      const [showForm, setShowForm] = useState(false)
-
-      useEffect(() => {
-        const timer = setTimeout(() => {
-          setShowForm(true)
-        }, 4000)
-      
-        return () => clearTimeout(timer)
-      }, [])
 
 
       const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,6 +168,13 @@ import FormModal from "@/components/OptFormModal"
 
       return (
         <div className="bg-white">
+          {restaurantData && (
+            <Navbar
+              restaurantName={restaurantData.restaurantName}
+              logo={restaurantData.logo}
+              id={restaurantData.id}
+            />
+          )}
           
           {/* Gallery Image Slider */}
           <div className="relative w-full h-52 overflow-hidden">
@@ -272,7 +271,10 @@ import FormModal from "@/components/OptFormModal"
             </div>
           )}
 
-          <FormModal restaurantId={restaurantData?.id} open={showForm} setOpen={setShowForm} />
+          <RegistrationPopup
+            restaurantId={restaurantData?.id}
+            enabled={restaurantData?.customerDetailsPopupEnabled}
+          />
 
 
           {/* Rating Dialog */}

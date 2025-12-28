@@ -1,6 +1,7 @@
 import { authMiddleware } from "@/app/lib/middleware/authMiddleware";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
+import { dayKey, monthKey, rangeStartDate, startOfDay, type AnalyticsRange } from "@/lib/analyticsRange";
 
 // Force dynamic rendering since we use cookies
 export const dynamic = 'force-dynamic';
@@ -34,62 +35,105 @@ export async function GET(req: NextRequest) {
     const restaurantId = userRestaurant.restaurantDetail.id;
 
     try {
-        // Calculate the date range for the past 7 days
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of today
-        
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 7); // 7 days ago
+        const url = new URL(req.url);
+        const rangeParam = url.searchParams.get("range") || "week";
+        const range: AnalyticsRange = (["week", "month", "year"] as const).includes(rangeParam as any)
+            ? (rangeParam as AnalyticsRange)
+            : "week";
 
-        // Get real daily QR scan data for the past 7 days
-        const dailyScans = await prisma.dailyQRScan.findMany({
+        const today = startOfDay(new Date());
+        const start = rangeStartDate(range, today);
+
+        const scans = await prisma.dailyQRScan.findMany({
             where: {
                 restaurantId: restaurantId,
                 scanDate: {
-                    gte: sevenDaysAgo,
-                    lt: today // Less than today (excludes today)
-                }
+                    gte: start,
+                    lte: today,
+                },
             },
-            orderBy: {
-                scanDate: 'asc' // Oldest to newest
-            }
+            orderBy: { scanDate: "asc" },
         });
 
-        // Create a map of existing scan data
-        const scanMap = new Map();
-        dailyScans.forEach((scan: any) => {
-            const dateKey = scan.scanDate.toISOString().split('T')[0];
-            scanMap.set(dateKey, scan.scanCount);
-        });
-
-        // Generate array of 7 days with real data or 0 for missing days
-        const days = [];
         let totalScans = 0;
-        
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(sevenDaysAgo);
-            date.setDate(sevenDaysAgo.getDate() + i);
-            
-            const dateKey = date.toISOString().split('T')[0];
-            const scanCount = scanMap.get(dateKey) || 0;
-            
-            days.push({
-                date: dateKey,
-                dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-                count: scanCount
-            });
-            
-            totalScans += scanCount;
+
+        if (range === "year") {
+            // aggregate by month
+            const monthMap = new Map<string, number>();
+            for (const s of scans as any[]) {
+                const d = new Date(s.scanDate);
+                const key = monthKey(d);
+                monthMap.set(key, (monthMap.get(key) || 0) + s.scanCount);
+            }
+
+            const points: any[] = [];
+            for (let i = 0; i < 12; i++) {
+                const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+                const key = monthKey(d);
+                const count = monthMap.get(key) || 0;
+                totalScans += count;
+                points.push({
+                    key,
+                    label: d.toLocaleDateString("en-US", { month: "short" }),
+                    count,
+                });
+            }
+
+            return NextResponse.json(
+                {
+                    range,
+                    points,
+                    totalScans,
+                    period: {
+                        start: start.toISOString().split("T")[0],
+                        end: today.toISOString().split("T")[0],
+                    },
+                },
+                { status: 200 }
+            );
         }
 
-        return NextResponse.json({
-            dailyScans: days,
-            totalScans: totalScans,
-            weekRange: {
-                start: sevenDaysAgo.toISOString().split('T')[0],
-                end: new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0] // Yesterday
+        // week/month: daily points
+        const scanMap = new Map<string, number>();
+        (scans as any[]).forEach((scan) => {
+            const dateKeyStr = dayKey(new Date(scan.scanDate));
+            scanMap.set(dateKeyStr, scan.scanCount);
+        });
+
+        const days = range === "week" ? 7 : 30;
+        const points: any[] = [];
+        let todayScanCount = 0;
+
+        for (let i = 0; i < days; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            const dateKeyStr = dayKey(d);
+            const count = scanMap.get(dateKeyStr) || 0;
+            totalScans += count;
+            if (dateKeyStr === dayKey(today)) {
+                todayScanCount = count;
             }
-        }, { status: 200 });
+            points.push({
+                key: dateKeyStr,
+                date: dateKeyStr,
+                label: String(d.getDate()).padStart(2, "0"),
+                count,
+            });
+        }
+
+        return NextResponse.json(
+            {
+                range,
+                points,
+                totalScans,
+                todayScans: todayScanCount,
+                period: {
+                    start: start.toISOString().split("T")[0],
+                    end: today.toISOString().split("T")[0],
+                },
+            },
+            { status: 200 }
+        );
 
     } catch (error) {
         console.error("Error fetching QR analytics:", error);

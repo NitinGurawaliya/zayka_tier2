@@ -53,6 +53,7 @@ interface RestaurantDetails {
   instagram: string;
   contactNumber: string;
   logo: string;
+  customerDetailsPopupEnabled?: boolean;
   categories: Category[];
   dishes: Dish[];
   galleryImages: GalleryImages[];
@@ -132,7 +133,13 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
   return (
     <div className="bg-white">
       {menuData && (
-        <Navbar restaurantName={menuData.restaurantName} logo={menuData.logo} id={""} />
+        <Navbar
+          restaurantName={menuData.restaurantName}
+          logo={menuData.logo}
+          id={menuData.id}
+          showUserIcon={false}
+          feedbackButtonVariant="black"
+        />
       )}
       {/* Gallery Image Slider */}
       <div className="relative w-full h-52 overflow-hidden">

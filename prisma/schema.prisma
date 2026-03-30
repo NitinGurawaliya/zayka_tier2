@@ -32,6 +32,7 @@ model RestaurantDetail {
   logo            String?
   instagram       String?
   facebook        String?
+  customerDetailsPopupEnabled Boolean   @default(true)
   qrScans        Int         @default(0)
   userId          Int        @unique
   user            User       @relation(fields: [userId], references: [id])

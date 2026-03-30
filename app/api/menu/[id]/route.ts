@@ -24,6 +24,7 @@ export async function GET(
         instagram: true,
         contactNumber: true,
         logo: true,
+        customerDetailsPopupEnabled: true,
         categories: true,
         dishes: true,
         galleryImages: true,

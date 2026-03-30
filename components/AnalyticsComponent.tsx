@@ -1,90 +1,163 @@
 "use client"
 
 import { BarChart, PieChart } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Bar,
   BarChart as RechartsBarChart,
   CartesianGrid,
-  Cell,
   Legend,
   Line,
   LineChart as RechartsLineChart,
-  Pie,
-  PieChart as RechartsPieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "./../components/chart"
 
-interface DishViewData{
-  id:number,
-  name:string,
-  views:number
+interface DishViewData {
+  id: number
+  name: string
+  views: number
 }
 
 interface AnalyticsComponentProps {
-  qrAnalyticsData?: any;
-  dishViewData?: DishViewData[];
+  qrAnalyticsData?: any
+  dishViewData?: DishViewData[]
 }
 
-export default function AnalyticsDashboard({ qrAnalyticsData, dishViewData }: AnalyticsComponentProps) {
-  const [activeTab, setActiveTab] = useState("qr");
+type Range = "week" | "month" | "year"
 
-  // Transform QR analytics data for the chart
-  const qrScanData = qrAnalyticsData?.dailyScans?.map((day: any) => ({
-    name: day.dayName,
-    scans: day.count
-  })) || [
-    { name: "Mon", scans: 0 },
-    { name: "Tue", scans: 0 },
-    { name: "Wed", scans: 0 },
-    { name: "Thu", scans: 0 },
-    { name: "Fri", scans: 0 },
-    { name: "Sat", scans: 0 },
-    { name: "Sun", scans: 0 },
-  ];
-
-  const qrLocationData = [
-    { name: "Dining Area", value: 45 },
-    { name: "Takeout Counter", value: 30 },
-    { name: "Website", value: 15 },
-    { name: "Social Media", value: 10 },
+function RangeButtons({
+  value,
+  onChange,
+}: {
+  value: Range
+  onChange: (v: Range) => void
+}) {
+  const items: Array<{ key: Range; label: string }> = [
+    { key: "week", label: "Past week" },
+    { key: "month", label: "Past month" },
+    { key: "year", label: "Past year" },
   ]
 
-  // Use real dish data if available, otherwise fallback to mock data
-  const dishPopularityData = dishViewData?.map(dish => ({
-    name: dish.name,
-    views: dish.views
-  })) || [
-    { name: "Pasta", views: 85 },
-    { name: "Pizza", views: 120 },
-    { name: "Salad", views: 55 },
-    { name: "Burger", views: 95 },
-    { name: "Dessert", views: 40 },
-  ]
+  return (
+    <div className="flex gap-2">
+      {items.map((it) => (
+        <Button
+          key={it.key}
+          variant={value === it.key ? "default" : "outline"}
+          size="sm"
+          onClick={() => onChange(it.key)}
+        >
+          {it.label}
+        </Button>
+      ))}
+    </div>
+  )
+}
 
-  const dishRevenueData = [
-    { name: "Mon", revenue: 1200 },
-    { name: "Tue", revenue: 1500 },
-    { name: "Wed", revenue: 1800 },
-    { name: "Thu", revenue: 1450 },
-    { name: "Fri", revenue: 1900 },
-    { name: "Sat", revenue: 2100 },
-    { name: "Sun", revenue: 1700 },
-  ]
+export default function AnalyticsDashboard({
+  qrAnalyticsData,
+  dishViewData,
+}: AnalyticsComponentProps) {
+  const [qrRange, setQrRange] = useState<Range>("week")
+  const [dishRange, setDishRange] = useState<Range>("week")
 
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
+  const [qrLoading, setQrLoading] = useState(false)
+  const [dishLoading, setDishLoading] = useState(false)
+
+  const [qrPoints, setQrPoints] = useState<Array<{ label: string; scans: number }>>([])
+  const [dishPoints, setDishPoints] = useState<Array<{ name: string; views: number }>>(
+    dishViewData?.map((d) => ({ name: d.name, views: d.views })) || []
+  )
+
+  useEffect(() => {
+    const load = async () => {
+      setQrLoading(true)
+      try {
+        const res = await fetch(`/api/restaurant/qrcode/analytics?range=${qrRange}`, {
+          credentials: "include",
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setQrPoints(
+            (data.points || []).map((p: any) => ({
+              label: p.label,
+              scans: p.count,
+            }))
+          )
+        } else {
+          // fallback to server-provided data (no hardcoded)
+          setQrPoints(
+            (qrAnalyticsData?.dailyScans || []).map((d: any) => ({
+              label: d.dayName || d.date || "",
+              scans: d.count || 0,
+            }))
+          )
+        }
+      } finally {
+        setQrLoading(false)
+      }
+    }
+    load()
+  }, [qrRange, qrAnalyticsData])
+
+  useEffect(() => {
+    const load = async () => {
+      setDishLoading(true)
+      try {
+        const res = await fetch(`/api/menu/analytics/dish?range=${dishRange}`, {
+          credentials: "include",
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setDishPoints((data.dishes || []).map((d: any) => ({ name: d.name, views: d.views })))
+        } else {
+          setDishPoints(dishViewData?.map((d) => ({ name: d.name, views: d.views })) || [])
+        }
+      } finally {
+        setDishLoading(false)
+      }
+    }
+    load()
+  }, [dishRange, dishViewData])
+
+  const totalQrScans = useMemo(
+    () => qrPoints.reduce((sum, p) => sum + (p.scans || 0), 0),
+    [qrPoints]
+  )
+  const avgQrScans = useMemo(
+    () => (qrPoints.length ? Math.round(totalQrScans / qrPoints.length) : 0),
+    [qrPoints, totalQrScans]
+  )
+  const peakQr = useMemo(() => {
+    if (qrPoints.length === 0) return { label: "—", scans: 0 }
+    return qrPoints.reduce((max, cur) => (cur.scans > max.scans ? cur : max), qrPoints[0])
+  }, [qrPoints])
+
+  const totalDishViews = useMemo(
+    () => dishPoints.reduce((sum, p) => sum + (p.views || 0), 0),
+    [dishPoints]
+  )
+  const avgDishViews = useMemo(
+    () => (dishPoints.length ? Math.round(totalDishViews / dishPoints.length) : 0),
+    [dishPoints, totalDishViews]
+  )
+  const topDish = useMemo(() => {
+    if (dishPoints.length === 0) return { name: "—", views: 0 }
+    return dishPoints.reduce((max, cur) => (cur.views > max.views ? cur : max), dishPoints[0])
+  }, [dishPoints])
 
   return (
     <div className="w-full max-w-6xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Analytics Dashboard</h1>
 
-      <Tabs defaultValue="qr" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue="qr" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="qr" className="flex items-center gap-2">
             <BarChart className="h-4 w-4" />
@@ -97,79 +170,67 @@ export default function AnalyticsDashboard({ qrAnalyticsData, dishViewData }: An
         </TabsList>
 
         <TabsContent value="qr" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>QR Code Scans</CardTitle>
-                <CardDescription>Daily scan activity over the past week</CardDescription>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div>
+                    <CardTitle>QR Code Scans</CardTitle>
+                    <CardDescription>
+                      {qrRange === "week"
+                        ? "Past 7 days"
+                        : qrRange === "month"
+                        ? "Past 30 days"
+                        : "Past 12 months"}
+                    </CardDescription>
+                  </div>
+                  <RangeButtons value={qrRange} onChange={setQrRange} />
+                </div>
               </CardHeader>
               <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsBarChart data={qrScanData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="scans" fill="hsl(var(--primary))" />
-                  </RechartsBarChart>
-                </ResponsiveContainer>
+                {qrLoading ? (
+                  <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                    Loading...
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsLineChart data={qrPoints}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="label" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="scans"
+                        stroke="#2563eb"
+                        strokeWidth={3}
+                        dot={false}
+                      />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>QR Code Locations</CardTitle>
-                <CardDescription>Distribution of scans by location</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
-                    <Pie
-                      data={qrLocationData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {qrLocationData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle>QR Analytics Summary</CardTitle>
-                <CardDescription>Key metrics for your QR codes this week</CardDescription>
+                <CardDescription>Key metrics for selected range</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-muted rounded-lg p-4">
-                    <p className="text-muted-foreground text-sm">Total Scans This Week</p>
-                    <p className="text-3xl font-bold">{qrAnalyticsData?.totalScans || 0}</p>
-                    <p className="text-green-500 text-sm">Last 7 days</p>
+                    <p className="text-muted-foreground text-sm">Total Scans</p>
+                    <p className="text-3xl font-bold">{totalQrScans}</p>
                   </div>
                   <div className="bg-muted rounded-lg p-4">
-                    <p className="text-muted-foreground text-sm">Average Daily Scans</p>
-                    <p className="text-3xl font-bold">{qrAnalyticsData?.totalScans ? Math.round(qrAnalyticsData.totalScans / 7) : 0}</p>
-                    <p className="text-green-500 text-sm">Per day average</p>
+                    <p className="text-muted-foreground text-sm">Average</p>
+                    <p className="text-3xl font-bold">{avgQrScans}</p>
                   </div>
                   <div className="bg-muted rounded-lg p-4">
-                    <p className="text-muted-foreground text-sm">Peak Day</p>
-                    <p className="text-3xl font-bold">
-                      {qrAnalyticsData?.dailyScans?.reduce((max: any, day: any) => 
-                        day.count > max.count ? day : max, { count: 0, dayName: 'N/A' })?.dayName || 'N/A'}
-                    </p>
-                    <p className="text-muted-foreground text-sm">Highest scan day</p>
+                    <p className="text-muted-foreground text-sm">Peak</p>
+                    <p className="text-3xl font-bold">{peakQr.label}</p>
                   </div>
                 </div>
               </CardContent>
@@ -178,72 +239,61 @@ export default function AnalyticsDashboard({ qrAnalyticsData, dishViewData }: An
         </TabsContent>
 
         <TabsContent value="dish analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Dish Popularity</CardTitle>
-                <CardDescription>Most viewed dishes this week</CardDescription>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div>
+                    <CardTitle>Dish Views</CardTitle>
+                    <CardDescription>
+                      {dishRange === "week"
+                        ? "Past 7 days"
+                        : dishRange === "month"
+                        ? "Past 30 days"
+                        : "Past 12 months"}
+                    </CardDescription>
+                  </div>
+                  <RangeButtons value={dishRange} onChange={setDishRange} />
+                </div>
               </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsBarChart data={dishPopularityData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={80} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="views" fill="hsl(var(--primary))" />
-                  </RechartsBarChart>
-                </ResponsiveContainer>
+              <CardContent className="h-[420px]">
+                {dishLoading ? (
+                  <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                    Loading...
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsBarChart data={dishPoints} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" allowDecimals={false} />
+                      <YAxis dataKey="name" type="category" width={160} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="views" fill="#2563eb" />
+                    </RechartsBarChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Dish Revenue</CardTitle>
-                <CardDescription>Daily revenue over the past week</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsLineChart data={dishRevenueData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [`$${value}`, "Revenue"]} />
-                    <Legend />
-                    <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
-                  </RechartsLineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle>Dish Analytics Summary</CardTitle>
-                <CardDescription>Key metrics for your menu items</CardDescription>
+                <CardDescription>Key metrics for selected range</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-muted rounded-lg p-4">
                     <p className="text-muted-foreground text-sm">Total Views</p>
-                    <p className="text-3xl font-bold">
-                      {dishViewData?.reduce((sum, dish) => sum + dish.views, 0) || 395}
-                    </p>
-                    <p className="text-green-500 text-sm">↑ 15% from last week</p>
+                    <p className="text-3xl font-bold">{totalDishViews}</p>
                   </div>
                   <div className="bg-muted rounded-lg p-4">
-                    <p className="text-muted-foreground text-sm">Average Views</p>
-                    <p className="text-3xl font-bold">
-                      {dishViewData?.length ? Math.round(dishViewData.reduce((sum, dish) => sum + dish.views, 0) / dishViewData.length) : 79}
-                    </p>
-                    <p className="text-green-500 text-sm">Per dish average</p>
+                    <p className="text-muted-foreground text-sm">Average</p>
+                    <p className="text-3xl font-bold">{avgDishViews}</p>
                   </div>
                   <div className="bg-muted rounded-lg p-4">
                     <p className="text-muted-foreground text-sm">Most Popular</p>
-                    <p className="text-3xl font-bold">
-                      {dishViewData?.reduce((max, dish) => dish.views > max.views ? dish : max, { name: 'N/A', views: 0 })?.name || 'N/A'}
-                    </p>
-                    <p className="text-muted-foreground text-sm">Highest viewed dish</p>
+                    <p className="text-3xl font-bold">{topDish.name}</p>
                   </div>
                 </div>
               </CardContent>

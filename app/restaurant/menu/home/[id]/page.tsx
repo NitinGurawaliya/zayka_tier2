@@ -26,6 +26,7 @@ export default async function RestaurantMenuPage({ params }: PageProps) {
       instagram: true,
       contactNumber: true,
       logo: true,
+      customerDetailsPopupEnabled: true,
       categories: true,
       dishes: true,
       galleryImages: true,
@@ -38,8 +39,8 @@ export default async function RestaurantMenuPage({ params }: PageProps) {
     return <div>Restaurant not found</div>;
   }
 
-  // Check for user_token cookie and validate
-  let showRegistrationPopup = true;
+  // Check for user_token cookie and validate + restaurant-level toggle
+  let showRegistrationPopup = !!menuData.customerDetailsPopupEnabled;
   const cookieStore = cookies();
   const token = cookieStore.get('user_token')?.value;
   if (token && process.env.NEXTAUTH_SECRET) {
@@ -47,7 +48,7 @@ export default async function RestaurantMenuPage({ params }: PageProps) {
       jwt.verify(token, process.env.NEXTAUTH_SECRET);
       showRegistrationPopup = false;
     } catch (e) {
-      showRegistrationPopup = true;
+      showRegistrationPopup = !!menuData.customerDetailsPopupEnabled;
     }
   }
 

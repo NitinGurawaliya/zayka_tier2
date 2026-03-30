@@ -10,6 +10,7 @@ import GalleryManager from "@/components/GalleryManager";
 import AddSpecialButton from "@/components/AddSpecialButton";
 import GalleryUploadButton from "@/components/GalleryUploadButton";
 import VisitorCountCard from "@/components/VisitorCountCard";
+import ReviewsDashboard from "@/components/ReviewsDashboard";
 
 interface DashboardContentProps {
   section?: string;
@@ -50,6 +51,9 @@ export default function DashboardContent({ section, dashboardData }: DashboardCo
         qrAnalyticsData={dashboardData.qrAnalytics} 
         dishViewData={dashboardData.dishAnalytics}
       />
+      break;
+    case "reviews":
+      content = <ReviewsDashboard />;
       break;
     case "my-customers":
       content = <ManageCustomers customers={dashboardData.customers} />

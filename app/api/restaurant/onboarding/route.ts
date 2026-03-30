@@ -38,21 +38,24 @@ export async function POST(req: NextRequest) {
     const location = formData.get("location") as string 
     const weekdaysWorking = formData.get("weekdaysWorking") as string 
     const weekendWorking = formData.get("weekendWorking") as string
-    const file = formData.get("logo") as File
+    const file = formData.get("logo")
     const instagram = formData.get("instagram") as string
     const facebook = formData.get("facebook") as string 
+    
+    // Logo is optional during onboarding
+    let imageUrl: string | null = null;
+    if (file instanceof File && file.size > 0) {
+        // Convert file to base64
+        const buffer = await file.arrayBuffer();
+        const base64String = Buffer.from(buffer).toString("base64");
 
+        const uploadResponse = await cloudinary.uploader.upload(`data:image/jpeg;base64,${base64String}`, {
+            folder: "dishes_image",
+            public_id: file.name.split(".")[0],
+        });
 
-    // Convert file to base64
-    const buffer = await file.arrayBuffer();
-    const base64String = Buffer.from(buffer).toString("base64");    
-
-    const uploadResponse = await cloudinary.uploader.upload(`data:image/jpeg;base64,${base64String}`, {
-      folder: "dishes_image",
-      public_id: file.name.split(".")[0],
-    });
-
-    const imageUrl = uploadResponse.secure_url;
+        imageUrl = uploadResponse.secure_url;
+    }
 
     // Validate subdomain
     const reserved = ["www", "api", "admin", "mail", "ftp", "blog"];
@@ -86,7 +89,7 @@ export async function POST(req: NextRequest) {
                 location,
                 weekdaysWorking,
                 weekendWorking,
-                logo:imageUrl,
+                logo: imageUrl,
                 instagram,
                 facebook,
                 userId: parseInt(userId),

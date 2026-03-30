@@ -12,8 +12,6 @@ export const signinSchema = zod.object({
     password:zod.string().min(6)
 })
 
-
-
 export const restaurantOnboardingSchema = zod.object({
   restaurantName: zod.string(),
   contactNumber: zod.string(),

@@ -1,4 +1,4 @@
-# DineInn - Digital Restaurant Menu Management
+# Zayka - Digital Restaurant Menu Management
 
 A comprehensive restaurant management platform that enables restaurants to create digital QR menus, manage dishes, engage with customers, and grow their business.
 

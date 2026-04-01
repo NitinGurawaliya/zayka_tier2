@@ -44,7 +44,6 @@ model RestaurantDetail {
   announcements   Announcement[]
   customer        Customer []
   dailyQrScans    DailyQRScan[]
-  // polls           Poll[]
 }
 
 model RestaurantRating{

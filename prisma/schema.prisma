@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,6 +6,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model User {
   id               Int              @id @default(autoincrement())
   name             String
@@ -32,44 +27,69 @@ model RestaurantDetail {
   logo            String?
   instagram       String?
   facebook        String?
+
+  // 🔥 feature flags
+  feedbackEnabled Boolean   @default(true)
+  qrEnabled       Boolean   @default(false)
+
   customerDetailsPopupEnabled Boolean   @default(true)
   qrScans        Int         @default(0)
+
   userId          Int        @unique
   user            User       @relation(fields: [userId], references: [id])
 
-  rating      RestaurantRating[]
+  // 🔥 NEW core relations
+  customers       Customer[]
+  feedbacks       Feedback[]
+
+  // existing
   galleryImages   RestaurantGallery[]
   categories      Category[]
-  dishes          Dishes[]  
+  dishes          Dishes[]
   announcements   Announcement[]
-  customer        Customer []
   dailyQrScans    DailyQRScan[]
-  // polls           Poll[]
 }
 
-model RestaurantRating{
-  id          Int @id @default(autoincrement())
-  rating      Int 
-  message     String? 
+model Customer {
+  id           Int      @id @default(autoincrement())
+  name         String?
+  mobile       String
+  email        String?
+  DOB          DateTime?
   restaurantId Int
-  createdAt     DateTime @default(now())
+
+  restaurant   RestaurantDetail @relation(fields: [restaurantId], references: [id])
+  feedbacks    Feedback[]
+
+  @@unique([mobile, restaurantId]) 
+}
+
+model Feedback {
+  id           Int      @id @default(autoincrement())
+  rating       Int
+  message      String?
+  customerId   Int?
+  restaurantId Int
+  createdAt    DateTime @default(now())
+
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  restaurant   RestaurantDetail @relation(fields: [restaurantId], references: [id])
+}
+
+model RestaurantGallery {
+  id            Int     @id @default(autoincrement())
+  restaurantId  Int
+  imageUrl      String
 
   restaurant    RestaurantDetail @relation(fields: [restaurantId], references: [id])
-}
-
-model RestaurantGallery{
-  id            Int     @id @default(autoincrement())
-  restaurantId  Int      
-  imageUrl      String
-  restaurant    RestaurantDetail   @relation(fields: [restaurantId],references: [id])
 }
 
 model Category {
   id            Int        @id @default(autoincrement())
   name          String
   restaurantId  Int
-  restaurant    RestaurantDetail @relation(fields: [restaurantId], references: [id])
 
+  restaurant    RestaurantDetail @relation(fields: [restaurantId], references: [id])
   dishes        Dishes[]
 }
 
@@ -77,15 +97,17 @@ model Dishes {
   id              Int         @id @default(autoincrement())
   name            String
   price           Float
-  image           String?   
-  description      String   @default("no description")
-  type            DishType @default(VEG)
+  image           String?
+  description     String      @default("no description")
+  type            DishType    @default(VEG)
   categoryId      Int
-  restaurantId    Int        
+  restaurantId    Int
+
   restaurant      RestaurantDetail @relation(fields: [restaurantId], references: [id])
-  category        Category     @relation(fields: [categoryId], references: [id])
-  views          DishView[]
-  viewsCount     Int         @default(0) // running total of views
+  category        Category @relation(fields: [categoryId], references: [id])
+
+  views           DishView[]
+  viewsCount      Int         @default(0)
 }
 
 model Announcement {
@@ -94,49 +116,35 @@ model Announcement {
   content         String
   createdAt       DateTime          @default(now())
   restaurantId    Int
+
   restaurant      RestaurantDetail  @relation(fields: [restaurantId], references: [id])
 }
-
-model Customer{
-  id              Int       @id @default(autoincrement())
-  name            String
-  mobile          String    @unique
-  email           String?    
-  DOB             DateTime?
-
-  restaurant      RestaurantDetail[]
-
-}
-
-
 
 enum DishType {
   VEG
   NON_VEG
 }
 
-model DishView{
-  id      Int    @id @default(autoincrement())
-  dishId  Int
-  timestamp DateTime @default(now()) 
-  dish    Dishes   @relation(fields: [dishId],references: [id],onDelete: Cascade)
+model DishView {
+  id        Int      @id @default(autoincrement())
+  dishId    Int
+  timestamp DateTime @default(now())
+
+  dish      Dishes   @relation(fields: [dishId], references: [id], onDelete: Cascade)
 }
 
 model DailyQRScan {
   id            Int      @id @default(autoincrement())
   restaurantId  Int
-  scanDate      DateTime @db.Date // Store only the date part
+  scanDate      DateTime @db.Date
   scanCount     Int      @default(1)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   restaurant    RestaurantDetail @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  
-  @@unique([restaurantId, scanDate]) // Ensure one record per restaurant per day
+
+  @@unique([restaurantId, scanDate])
 }
-
-
-
 
 
 

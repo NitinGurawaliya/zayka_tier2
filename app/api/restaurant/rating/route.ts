@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const created = await prisma.restaurantRating.create({
+    const created = await prisma.feedback.create({
       data: {
         restaurantId: parsed.data.restaurantId,
         rating: parsed.data.stars,

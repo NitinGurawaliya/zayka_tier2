@@ -82,11 +82,7 @@ export async function GET(req: NextRequest) {
             // Customers
             prisma.customer.findMany({
                 where: { 
-                    restaurant: {
-                        some: {
-                            id: restaurantId
-                        }
-                    }
+                            restaurantId: restaurantId
                 },
                 select: {
                     id: true,

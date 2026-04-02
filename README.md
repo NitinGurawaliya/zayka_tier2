@@ -19,6 +19,9 @@ A comprehensive restaurant management platform that enables restaurants to creat
 - **Rating & Reviews**: Provide feedback on dining experience
 - **Contactless Experience**: No physical menu handling required
 
+## 📚 Detailed Feature Docs
+- Product & market-research style documentation: [`features.md`](./features.md)
+
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 14, React 18, TypeScript

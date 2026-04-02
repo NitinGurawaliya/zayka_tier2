@@ -1,34 +1,38 @@
 import { signupSchema } from "@/zod";
 import { sign } from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
-import { createUserInDb } from "@/db/queries";
+import prisma from "@/app/lib/prisma";
+
+// Force dynamic rendering since we set cookies
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const parsed = signupSchema.safeParse(body);
+    const { success } = signupSchema.safeParse(body);
 
-    if (!parsed.success) {
-      return NextResponse.json({ 
-        msg: "Invalid data sent" 
-      }, { status: 400 });
+    if (!success) {
+      return NextResponse.json({ msg: "Invalid data sent" }, { status: 400 });
     }
 
-    const { email, name, password } = parsed.data;
+    const findUnique = await prisma.user.findUnique({
+      where: {
+        email: body.email,
+      },
+    });
 
-    const user = await createUserInDb({
-        email: email,
-        name: name,
-        password: password,
-    })
-
-    if(!user){
-      return  NextResponse.json({ 
-        msg: "signup failed" 
-      }, { status: 409 });
+    if (findUnique) {
+      return NextResponse.json({ msg: "User already exists" }, { status: 409 });
     }
+
+    const user = await prisma.user.create({
+      data: {
+        email: body.email,
+        password: body.password,
+        name: body.name,
+      },
+    });
 
     const token = sign(
       { id: user.id },
@@ -39,6 +43,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ 
       msg: "Signup successful",
       userId: user.id,
+      token
     });
 
     response.cookies.set("token", token, {

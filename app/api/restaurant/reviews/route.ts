@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   const start = rangeStartDate(range, today);
 
   // Fetch reviews only for this restaurant
-  const reviews = await prisma.restaurantRating.findMany({
+  const reviews = await prisma.feedback.findMany({
     where: {
       restaurantId: restaurant.id,
       createdAt: { gte: start },

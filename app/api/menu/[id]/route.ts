@@ -28,8 +28,14 @@ export async function GET(
         categories: true,
         dishes: true,
         galleryImages: true,
-        rating: true,
-        announcements:true
+        announcements: true,
+
+        // ✅ FIX: use feedbacks instead of rating
+        feedbacks: {
+          select: {
+            rating: true
+          }
+        }
       },
     });
 
@@ -37,14 +43,16 @@ export async function GET(
       return NextResponse.json({ msg: "Menu not found" }, { status: 404 });
     }
 
-    // Calculate average rating and count
-    const ratings = menu.rating;
+    // ✅ FIX: use feedbacks
+    const ratings = menu.feedbacks;
     const totalRatings = ratings.length;
+
     const averageRating =
       totalRatings > 0
         ? parseFloat(
             (
-              ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings
+              ratings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) /
+              totalRatings
             ).toFixed(1)
           )
         : 0;
@@ -54,7 +62,6 @@ export async function GET(
         averageRating,
         totalRatings,
         ...menu,
-        
       },
       { status: 200 }
     );

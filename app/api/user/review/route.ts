@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const newRating = await prisma.restaurantRating.create({
+    const newRating = await prisma.feedback.create({
       data: {
         rating,
         message,

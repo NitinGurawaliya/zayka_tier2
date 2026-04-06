@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import CategoryComponent from "@/components/CategoryBar";
 import DishesCard from "@/components/DishesCard";
 import axios from "axios";
@@ -73,10 +73,17 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
   const [galleryImages, setGalleryImages] = useState<GalleryImages[]>(menuData.galleryImages || []);
   const [announcement, setAnnouncement] = useState<Announcements[]>(menuData.announcements || []);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isSliding, setIsSliding] = useState(true);
   const [showScrollText, setShowScrollText] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const dishesContainerRef = useRef<HTMLDivElement>(null);
   const categoryBarRef = useRef<HTMLDivElement>(null);
+
+  const visibleGalleryImages = useMemo(() => galleryImages.slice(0, 3), [galleryImages]);
+  const sliderImages = useMemo(() => {
+    if (visibleGalleryImages.length === 0) return [];
+    return [...visibleGalleryImages, visibleGalleryImages[0]];
+  }, [visibleGalleryImages]);
 
   useEffect(() => {
     async function name() {
@@ -96,12 +103,33 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
   };
 
   useEffect(() => {
-    if (galleryImages.length === 0) return;
+    setCurrentIndex(0);
+    setIsSliding(true);
+  }, [galleryImages]);
+
+  useEffect(() => {
+    if (visibleGalleryImages.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % Math.min(3, galleryImages.length));
+      setCurrentIndex((prevIndex) => {
+        if (prevIndex >= visibleGalleryImages.length) return prevIndex;
+        return prevIndex + 1;
+      });
     }, 2000);
     return () => clearInterval(interval);
-  }, [galleryImages]);
+  }, [visibleGalleryImages.length]);
+
+  const handleSliderTransitionEnd = () => {
+    if (currentIndex !== visibleGalleryImages.length) return;
+
+    setIsSliding(false);
+    setCurrentIndex(0);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsSliding(true);
+      });
+    });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -144,10 +172,11 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
       {/* Gallery Image Slider */}
       <div className="relative w-full h-52 overflow-hidden">
         <div
-          className="flex transition-transform duration-1000 ease-in-out"
+          className={`flex ${isSliding ? "transition-transform duration-1000 ease-in-out" : ""}`}
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          onTransitionEnd={handleSliderTransitionEnd}
         >
-          {galleryImages.slice(0, 3).map((image, index) => (
+          {sliderImages.map((image, index) => (
             <img
               key={index}
               src={image.imageUrl || "/placeholder.svg"}

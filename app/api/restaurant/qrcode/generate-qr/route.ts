@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ msg: "Restaurant not found" }, { status: 404 });
     }
 
-    const frontendUrl = `https://${restaurantDetail?.subdomain}.dineinn.shop`;
+    const frontendUrl = `https://${restaurantDetail?.subdomain}.zayka.online`;
 
     try {
         const qrCodeUrl = await QRCode.toDataURL(frontendUrl);

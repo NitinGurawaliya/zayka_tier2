@@ -138,12 +138,12 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
       const title =
         previousVisits === 0
           ? `Hey ${customerName}, welcome to ${menuData.restaurantName}`
-          : `Hey ${customerName}, good to see you again`;
+          : `Hey ${customerName}, welcome again to ${menuData.restaurantName}`;
 
       addToast({
         type: "mono",
         title,
-        duration: 3500,
+        duration: 4500,
       });
 
       localStorage.setItem(restaurantKey, String(previousVisits + 1));

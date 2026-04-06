@@ -1,10 +1,20 @@
 
 'use client';
 
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UserIcon } from "lucide-react";
 import FeedbackDialog from "@/components/FeedbackDialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 interface NavbarProps {
   id?: number
@@ -21,6 +31,56 @@ export const Navbar: React.FC<NavbarProps> = ({
   showUserIcon = true,
   feedbackButtonVariant = "outline",
 }) => {
+  const [customerInfo, setCustomerInfo] = useState<{ name: string; mobile: string } | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+
+  useEffect(() => {
+    if (!showUserIcon) return;
+
+    let isMounted = true;
+    const customerCacheKey = "beta:customer:me:details";
+
+    const fetchCustomerInfo = async () => {
+      const cachedCustomerRaw = sessionStorage.getItem(customerCacheKey);
+      if (cachedCustomerRaw) {
+        try {
+          const parsed = JSON.parse(cachedCustomerRaw) as { name?: string; mobile?: string };
+          setCustomerInfo({
+            name: parsed?.name || "Guest",
+            mobile: parsed?.mobile || "-",
+          });
+          return;
+        } catch {
+          sessionStorage.removeItem(customerCacheKey);
+        }
+      }
+
+      setIsLoadingProfile(true);
+      try {
+        const response = await fetch("/api/user/me", { method: "GET" });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!isMounted) return;
+        const nextInfo = {
+          name: data?.customer?.name || "Guest",
+          mobile: data?.customer?.mobile || "-",
+        };
+        setCustomerInfo(nextInfo);
+        sessionStorage.setItem(customerCacheKey, JSON.stringify(nextInfo));
+      } catch {
+        // Keep popup minimal; silently ignore if user_token is missing/invalid.
+      } finally {
+        if (isMounted) setIsLoadingProfile(false);
+      }
+    };
+
+    fetchCustomerInfo();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [showUserIcon]);
+
   return (
     <nav className="bg-white w-full border-b-2 p-1 shadow-xl border-gray-200 dark:bg-gray-900 dark:border-gray-700">
     <div className="w-full flex items-center justify-between px-1 py-1">
@@ -33,7 +93,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <span className="text-xl font-semibold dark:text-white">{restaurantName}</span>
       </div>
       <div className="flex items-center gap-2">
-        {typeof id === "number" && (
+        {/* {typeof id === "number" && (
           <FeedbackDialog
             restaurantId={id}
             restaurantName={restaurantName}
@@ -49,16 +109,59 @@ export const Navbar: React.FC<NavbarProps> = ({
               )
             }
           />
-        )}
+        )} */}
+
+          {/* here after user clicks on icon show modal mob no and name that user submitted on auth */}
         {showUserIcon && (
-          <div className="border-2 border-gray-200 p-1 rounded-full">
-            <Avatar>
-              <AvatarImage />
-              <AvatarFallback>
-                <UserIcon />
-              </AvatarFallback>
-            </Avatar>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="border-2 border-gray-200 p-1 rounded-full"
+                aria-label="Open user profile"
+              >
+                <Avatar>
+                  <AvatarImage />
+                  <AvatarFallback>
+                    <UserIcon />
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40 p-0">
+              <DropdownMenuLabel className="p-4 pb-3">
+                {isLoadingProfile ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                ) : customerInfo ? (
+                  <div className="space-y-2">
+                    <p className="text-base font-semibold">Hey {customerInfo.name}</p>
+                   
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-base font-semibold">Hey there</p>
+                    <Badge variant="outline" className="rounded-md px-2 py-1 text-xs">
+                      Not Registered
+                    </Badge>
+                  </div>
+                )}
+              </DropdownMenuLabel>
+              <Separator />
+              <div className="px-4 py-3">
+                <p className="text-xs text-neutral-500">Mob No</p>
+                {isLoadingProfile ? (
+                  <Skeleton className="mt-1 h-4 w-32" />
+                ) : (
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    {customerInfo?.mobile || "-"}
+                  </p>
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
     </div>

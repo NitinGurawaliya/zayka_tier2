@@ -13,6 +13,7 @@ import RestaurantGallery from "@/components/image-gallery";
 import BackToTop from "@/components/back-to-top";
 import AnnouncementList from "@/components/updates-section";
 import RegistrationPopup from "@/components/RegistrationPopup";
+import { useToast } from "@/components/ui/toast";
 
 interface GalleryImages {
   id: number;
@@ -66,6 +67,8 @@ interface SubdomainMenuClientProps {
 }
 
 export default function SubdomainMenuClient({ menuData, showRegistrationPopup }: SubdomainMenuClientProps) {
+  const { addToast } = useToast();
+  const hasShownVisitToastRef = useRef(false);
   const [activeTab, setActiveTab] = useState("Overview");
   const [categories, setCategories] = useState<Category[]>(menuData.categories || []);
   const [dishes, setDishes] = useState<Dish[]>(menuData.dishes || []);
@@ -94,6 +97,64 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
     }
     name();
   }, [menuData.id]);
+
+  useEffect(() => {
+    if (hasShownVisitToastRef.current) return;
+    hasShownVisitToastRef.current = true;
+
+    let isMounted = true;
+
+    const showVisitToast = async () => {
+      if (!menuData?.restaurantName) return;
+
+      const restaurantKey = menuData.id
+        ? `beta:restaurant:visits:${menuData.id}`
+        : `beta:restaurant:visits:${menuData.restaurantName.toLowerCase().replace(/\s+/g, "-")}`;
+      const previousVisits = Number(localStorage.getItem(restaurantKey) || "0");
+
+      let customerName = "there";
+      try {
+        const customerCacheKey = "beta:customer:me";
+        const cachedCustomerName = sessionStorage.getItem(customerCacheKey);
+        if (cachedCustomerName) {
+          customerName = cachedCustomerName;
+        } else {
+          const response = await fetch("/api/user/me");
+          if (response.ok) {
+            const data = await response.json();
+            const fetchedName = data?.customer?.name?.trim();
+            if (fetchedName) {
+              customerName = fetchedName;
+              sessionStorage.setItem(customerCacheKey, fetchedName);
+            }
+          }
+        }
+      } catch {
+        // Keep feature resilient and show a generic greeting if user info is unavailable.
+      }
+
+      if (!isMounted) return;
+
+      const title =
+        previousVisits === 0
+          ? `Hey ${customerName}, welcome to ${menuData.restaurantName}`
+          : `Hey ${customerName}, good to see you again`;
+
+      addToast({
+        type: "mono",
+        title,
+        duration: 3500,
+      });
+
+      localStorage.setItem(restaurantKey, String(previousVisits + 1));
+    };
+
+    showVisitToast();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [addToast, menuData.id, menuData.restaurantName]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value.toLowerCase();
@@ -165,7 +226,7 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
           restaurantName={menuData.restaurantName}
           logo={menuData.logo}
           id={menuData.id}
-          showUserIcon={false}
+          showUserIcon={true}
           feedbackButtonVariant="black"
         />
       )}

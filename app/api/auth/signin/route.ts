@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
         const { success } = signinSchema.safeParse(body);
 
-        if (!success) {
+        if (!success) {     
             return NextResponse.json({ msg: "Invalid data" }, { status: 401 });
         }
 

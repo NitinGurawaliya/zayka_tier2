@@ -87,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="flex items-center space-x-1">
         {logo ? (
           <img src={logo} className="h-14 w-14 object-cover" alt="Restaurant Logo" />
-        ) : (
+        ) : ( 
           <div className="h-14 w-14 rounded bg-gray-200" />
         )}
         <span className="text-xl font-semibold dark:text-white">{restaurantName}</span>

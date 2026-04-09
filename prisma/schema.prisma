@@ -69,11 +69,18 @@ model Feedback {
   rating       Int
   message      String?
   customerId   Int?
+  status FeedbackStatus @default(PARTIAL)
+  customerContact String?
   restaurantId Int
   createdAt    DateTime @default(now())
 
   customer     Customer? @relation(fields: [customerId], references: [id])
   restaurant   RestaurantDetail @relation(fields: [restaurantId], references: [id])
+}
+
+enum FeedbackStatus {
+  PARTIAL
+  COMPLETE
 }
 
 model RestaurantGallery {

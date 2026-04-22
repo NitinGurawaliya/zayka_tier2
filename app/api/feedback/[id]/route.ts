@@ -3,14 +3,13 @@ import prisma from "@/app/lib/prisma"
 
 interface Params{
     params:{
-        feedbackid:string
-        restaurantid:string
+        id:string
     }
 }
 
 export async function PATCH(req:NextRequest,{params}:Params) {
 
-    const feedbackid = Number(params.feedbackid);
+    const feedbackid = Number(params.id);
 
     const data = await req.json();
 
@@ -50,19 +49,17 @@ export async function PATCH(req:NextRequest,{params}:Params) {
 }
 
 
-
-
-
 export async function POST(req:NextRequest,{params}:Params) {
 
     try {
         const data = await req.json()
-        const restaurantId = Number(params.restaurantid)
+        const restaurantId = Number(params.id)
+
+        console.log("data in post api",restaurantId,data.rating)
 
         if(!restaurantId || !data.rating){
             return NextResponse.json({
                 msg:"Full data nro sent",
-
             })
         }
 
@@ -78,8 +75,7 @@ export async function POST(req:NextRequest,{params}:Params) {
         console.log(feedback)
 
         return NextResponse.json({
-            msg:"hello",
-            feedbackid: feedback.id
+            msg:"feedback added",
         })
 
     } catch (error) {

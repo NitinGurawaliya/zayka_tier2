@@ -3,13 +3,14 @@ import prisma from "@/app/lib/prisma"
 
 interface Params{
     params:{
-        id:string
+        feedbackid:string
+        restaurantid:string
     }
 }
 
 export async function PATCH(req:NextRequest,{params}:Params) {
 
-    const feedbackid = Number(params.id);
+    const feedbackid = Number(params.feedbackid);
 
     const data = await req.json();
 
@@ -46,4 +47,49 @@ export async function PATCH(req:NextRequest,{params}:Params) {
       feedback,
     });
 
+}
+
+
+
+
+
+export async function POST(req:NextRequest,{params}:Params) {
+
+    try {
+        const data = await req.json()
+        const restaurantId = Number(params.restaurantid)
+
+        if(!restaurantId || !data.rating){
+            return NextResponse.json({
+                msg:"Full data nro sent",
+
+            })
+        }
+
+
+        const feedback = await prisma.feedback.create({
+            data:{
+                restaurantId:restaurantId,
+                rating:data.rating,
+            }
+        })
+
+        
+        console.log(feedback)
+
+        return NextResponse.json({
+            msg:"hello",
+            feedbackid: feedback.id
+        })
+
+    } catch (error) {
+        console.log(error)
+
+        return NextResponse.json({
+            msg:"something is wrong",
+            error
+        })
+        
+        
+    }
 }

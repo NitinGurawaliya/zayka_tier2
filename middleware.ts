@@ -3,6 +3,24 @@ import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 import { subdomainMiddleware } from './middleware/subdomain'
 
+const CORS_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+const DEFAULT_CORS_HEADERS = 'Content-Type, Authorization, X-Requested-With'
+
+function withCorsHeaders(request: NextRequest, response: NextResponse) {
+  const requestedHeaders = request.headers.get('access-control-request-headers')
+
+  response.headers.set('Vary', 'Origin')
+  response.headers.set('Access-Control-Allow-Methods', CORS_METHODS)
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set(
+    'Access-Control-Allow-Headers',
+    requestedHeaders || DEFAULT_CORS_HEADERS
+  )
+  response.headers.set('Access-Control-Max-Age', '86400')
+
+  return response
+}
+
 // Define protected routes that require authentication
 const protectedRoutes = [
   '/restaurant/dashboard',
@@ -22,6 +40,14 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get('token')?.value
 
+  if (pathname.startsWith('/api')) {
+    if (request.method === 'OPTIONS') {
+      return withCorsHeaders(request, new NextResponse(null, { status: 204 }))
+    }
+
+    return withCorsHeaders(request, NextResponse.next())
+  }
+
   // Debug logging
   console.log('MIDDLEWARE:', { pathname, token })
 
@@ -32,9 +58,6 @@ export async function middleware(request: NextRequest) {
   if (subdomain && subdomain !== 'www' && subdomain !== 'dineinn' && subdomain !== 'localhost') {
     return subdomainMiddleware(request);
   }
-
-  // If requesting an API route, skip middleware
-  if (pathname.startsWith('/api')) return NextResponse.next()
 
   // If not authenticated and on a protected route, redirect to signin
   if (protectedRoutes.some(route => pathname.startsWith(route)) && !token) {
@@ -71,14 +94,14 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/api/:path*',
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|api).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 } 

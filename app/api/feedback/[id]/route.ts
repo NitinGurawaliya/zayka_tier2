@@ -20,10 +20,12 @@ export async function PATCH(req:NextRequest,{params}:Params) {
     }
 
     console.log("data in patch api",data)
+    try {
 
+        
     const {message, contactNumber} = data;
 
-    if (!message && !contactNumber) {
+    if (!message || !contactNumber) {
         return NextResponse.json(
             { msg: "Nothing to update" },
             { status: 400 }
@@ -47,6 +49,15 @@ export async function PATCH(req:NextRequest,{params}:Params) {
       msg: "Feedback updated",
       feedback,
     });
+        
+    } catch (error) {
+        console.log(error)
+
+        return NextResponse.json({
+            msg:"something is wrong",
+            error
+        })  
+    }
 
 }
 

@@ -14,6 +14,7 @@ export async function GET(req:NextRequest,{params}:{params:{id:string}}) {
             restaurantName:true,
             logo:true,
             location:true,
+            googlePlacedId:true
         }
     })
 

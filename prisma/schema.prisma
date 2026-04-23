@@ -27,6 +27,8 @@ model RestaurantDetail {
   logo            String?
   instagram       String?
   facebook        String?
+  googlePlacedId String?
+  
 
   // 🔥 feature flags
   feedbackEnabled Boolean   @default(true)

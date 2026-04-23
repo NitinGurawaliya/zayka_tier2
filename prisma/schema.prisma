@@ -69,6 +69,8 @@ model Feedback {
   rating       Int
   message      String?
   customerId   Int?
+  selectedPointIds String[] @default([])
+  selectedPoints   String[] @default([])
   status FeedbackStatus @default(PARTIAL)
   customerContact String?
   restaurantId Int

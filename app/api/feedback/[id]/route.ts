@@ -19,9 +19,11 @@ export async function PATCH(req:NextRequest,{params}:Params) {
         })
     }
 
-    const {message, customerContact} = data;
+    console.log("data in patch api",data)
 
-    if (!message && !customerContact) {
+    const {message, contactNumber} = data;
+
+    if (!message && !contactNumber) {
         return NextResponse.json(
             { msg: "Nothing to update" },
             { status: 400 }
@@ -35,7 +37,7 @@ export async function PATCH(req:NextRequest,{params}:Params) {
         },
         data:{
                message:message,
-               customerContact:customerContact,
+               customerContact:contactNumber,
                status:"COMPLETE" 
         }
     })
@@ -57,7 +59,9 @@ export async function POST(req:NextRequest,{params}:Params) {
 
         console.log("data in post api",restaurantId,data.rating)
 
-        if(!restaurantId || !data.rating){
+        const {rating,selectedPointIds,selectedPoints} = data;
+
+        if(!restaurantId || !rating || !selectedPointIds|| !selectedPointIds){
             return NextResponse.json({
                 msg:"Full data nro sent",
             })
@@ -68,6 +72,9 @@ export async function POST(req:NextRequest,{params}:Params) {
             data:{
                 restaurantId:restaurantId,
                 rating:data.rating,
+                selectedPoints,
+                selectedPointIds,
+                
             }
         })
 
@@ -76,6 +83,7 @@ export async function POST(req:NextRequest,{params}:Params) {
 
         return NextResponse.json({
             msg:"feedback added",
+            feedbackId:feedback.id,
         })
 
     } catch (error) {

@@ -25,13 +25,6 @@ export async function PATCH(req:NextRequest,{params}:Params) {
         
     const {message, contactNumber} = data;
 
-    if (!message || !contactNumber) {
-        return NextResponse.json(
-            { msg: "Nothing to update" },
-            { status: 400 }
-        );
-    }
-
 
     const feedback = await prisma.feedback.update({
         where:{

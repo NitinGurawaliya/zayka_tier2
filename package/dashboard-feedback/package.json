@@ -1,6 +1,6 @@
 {
   "name": "@nitin201/reviews-dashboard-component",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Reusable Reviews Dashboard",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -12,7 +12,7 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --tsconfig tsconfig.json"
   },
   "peerDependencies": {
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
   }
 }

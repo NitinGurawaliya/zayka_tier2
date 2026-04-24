@@ -1,6 +1,6 @@
 {
   "name": "@nitin201/zayka-auth",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Zayka Auth",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
@@ -20,8 +20,8 @@
   },
   "peerDependencies": {
     "next": "^14 || ^15",
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
   },
   "dependencies": {
     "axios": "^1.12.2",

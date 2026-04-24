@@ -10,7 +10,7 @@ import GalleryManager from "@/components/GalleryManager";
 import AddSpecialButton from "@/components/AddSpecialButton";
 import GalleryUploadButton from "@/components/GalleryUploadButton";
 import VisitorCountCard from "@/components/VisitorCountCard";
-import ReviewsDashboard from "@/components/ReviewsDashboard";
+import FeedbackDashboard from "@/components/FeedbackDashboard";
 
 interface DashboardContentProps {
   section?: string;
@@ -20,6 +20,7 @@ interface DashboardContentProps {
 export default function DashboardContent({ section, dashboardData }: DashboardContentProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentSection, setCurrentSection] = useState(section);
+  const [feedbackRange, setFeedbackRange] = useState<"week" | "month" | "year">("week");
 
   useEffect(() => {
     if (section !== currentSection) {
@@ -53,7 +54,18 @@ export default function DashboardContent({ section, dashboardData }: DashboardCo
       />
       break;
     case "reviews":
-      content = <ReviewsDashboard />;
+      content = (
+        <FeedbackDashboard
+          mode="zayka"
+          restaurantId={dashboardData.restaurant?.id}
+          timeRange={feedbackRange}
+          onTimeRangeChange={(range: string) => {
+            if (range === "week" || range === "month" || range === "year") {
+              setFeedbackRange(range);
+            }
+          }}
+        />
+      );
       break;
     case "my-customers":
       content = <ManageCustomers customers={dashboardData.customers} />

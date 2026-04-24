@@ -9,11 +9,11 @@ interface Params{
 }
 
 export async function PATCH(req:NextRequest,{params}:Params) {
-    const authResult  = await authMiddleware(req)
+    // const authResult  = await authMiddleware(req)
 
-    if(authResult.error){
-        return authResult.error;    
-    }
+    // if(authResult.error){
+    //     return authResult.error;    
+    // }
 
     const feedbackid = Number(params.id);
 

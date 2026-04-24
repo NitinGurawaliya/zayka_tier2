@@ -5,13 +5,34 @@ import { subdomainMiddleware } from './middleware/subdomain'
 
 const CORS_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
 const DEFAULT_CORS_HEADERS = 'Content-Type, Authorization, X-Requested-With'
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://dineinn-tier2-iota.vercel.app',
+  'https://dineinn-tier2.vercel.app',
+]
+
+function getAllowedOrigins() {
+  const envOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+
+  return envOrigins.length > 0 ? envOrigins : DEFAULT_ALLOWED_ORIGINS
+}
 
 function withCorsHeaders(request: NextRequest, response: NextResponse) {
   const requestedHeaders = request.headers.get('access-control-request-headers')
+  const requestOrigin = request.headers.get('origin')
+  const allowedOrigins = getAllowedOrigins()
+  const allowOrigin = requestOrigin && allowedOrigins.includes(requestOrigin) ? requestOrigin : null
 
-  response.headers.set('Vary', 'Origin')
+  response.headers.set('Vary', 'Origin, Access-Control-Request-Headers')
   response.headers.set('Access-Control-Allow-Methods', CORS_METHODS)
-  response.headers.set('Access-Control-Allow-Origin', '*')
+  if (allowOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', allowOrigin)
+    response.headers.set('Access-Control-Allow-Credentials', 'true')
+  }
   response.headers.set(
     'Access-Control-Allow-Headers',
     requestedHeaders || DEFAULT_CORS_HEADERS

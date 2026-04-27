@@ -1,6 +1,6 @@
 {
   "name": "@nitin201/zayka-auth",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Zayka Auth",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
@@ -19,7 +19,7 @@
     "build": "tsup src/index.ts --format esm --dts --tsconfig tsconfig.json"
   },
   "peerDependencies": {
-    "next": "^14 || ^15",
+    "next": "^13 || ^14 || ^15 || ^16",
     "react": "^18 || ^19",
     "react-dom": "^18 || ^19"
   },

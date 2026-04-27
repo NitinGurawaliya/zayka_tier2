@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma"
+import { authMiddleware } from "@/app/lib/middleware/authMiddleware";
 
 interface Params{
     params:{
@@ -8,6 +9,11 @@ interface Params{
 }
 
 export async function PATCH(req:NextRequest,{params}:Params) {
+    // const authResult  = await authMiddleware(req)
+
+    // if(authResult.error){
+    //     return authResult.error;    
+    // }
 
     const feedbackid = Number(params.id);
 
@@ -23,18 +29,20 @@ export async function PATCH(req:NextRequest,{params}:Params) {
     try {
 
         
-    const {message, contactNumber} = data;
+    const {message, customerContact, resolveOnly} = data;
 
+    console.log(data)
+
+
+    const updateData: any = resolveOnly
+      ? { isResolved: true }
+      : { message: message, customerContact: customerContact, status: "COMPLETE" };
 
     const feedback = await prisma.feedback.update({
         where:{
             id:feedbackid
         },
-        data:{
-               message:message,
-               customerContact:contactNumber,
-               status:"COMPLETE" 
-        }
+        data: updateData
     })
 
 

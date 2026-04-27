@@ -8,6 +8,8 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
     try {
+        const isProd = process.env.NODE_ENV === "production";
+        const sameSite: "lax" | "none" = isProd ? "none" : "lax";
         const body = await req.json();
 
         const { success } = signinSchema.safeParse(body);
@@ -43,16 +45,16 @@ export async function POST(req: NextRequest) {
             path: "/",
             maxAge: 30 * 24 * 60 * 60, // 30 days
             httpOnly: true, // Prevents access from frontend JavaScript
-            secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-            sameSite: "strict",
+            secure: isProd, // SameSite=None requires Secure in production
+            sameSite,
         });
 
         response.cookies.set("userId", findUser.id.toString(), {
             path: "/",
             maxAge: 30 * 24 * 60 * 60, // 30 days
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            secure: isProd,
+            sameSite,
         });
 
         return response;

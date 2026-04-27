@@ -18,6 +18,8 @@ export async function GET(req:NextRequest,{params}:{params:{id:string}}) {
         }
     })
 
+    console.log("info:",info)
+
     if(!info){
         return NextResponse.json({
             msg:"not found restuarnat   "

@@ -8,10 +8,16 @@ const DEFAULT_CORS_HEADERS = 'Content-Type, Authorization, X-Requested-With'
 
 function withCorsHeaders(request: NextRequest, response: NextResponse) {
   const requestedHeaders = request.headers.get('access-control-request-headers')
+  const requestOrigin = request.headers.get('origin')
 
-  response.headers.set('Vary', 'Origin')
+  response.headers.set('Vary', 'Origin, Access-Control-Request-Headers')
   response.headers.set('Access-Control-Allow-Methods', CORS_METHODS)
-  response.headers.set('Access-Control-Allow-Origin', '*')
+  if (requestOrigin) {
+    // Echo request origin to effectively allow all origins with credentials.
+    // Using "*" is invalid for credentialed requests.
+    response.headers.set('Access-Control-Allow-Origin', requestOrigin)
+    response.headers.set('Access-Control-Allow-Credentials', 'true')
+  }
   response.headers.set(
     'Access-Control-Allow-Headers',
     requestedHeaders || DEFAULT_CORS_HEADERS

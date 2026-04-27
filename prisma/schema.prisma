@@ -71,6 +71,7 @@ model Feedback {
   rating       Int
   message      String?
   customerId   Int?
+  isResolved    Boolean? @default(false)
   selectedPointIds String[] @default([])
   selectedPoints   String[] @default([])
   status FeedbackStatus @default(PARTIAL)

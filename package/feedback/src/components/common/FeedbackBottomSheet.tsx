@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
 
 interface FeedbackBottomSheetProps {
   isOpen: boolean;
   onDismiss: () => void;
-  children: ReactNode;
+  children: unknown;
   lockScroll?: boolean;
 }
 
@@ -76,7 +75,7 @@ const FeedbackBottomSheet = ({
           }}
         >
           <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-gray-200" />
-          {children}
+          {children as React.ReactNode}
         </div>
       </div>
     </div>

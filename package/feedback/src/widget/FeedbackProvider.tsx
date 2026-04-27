@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { ReactNode } from "react";
 import type { FeedbackClient, FeedbackWidgetProps } from "../types/public";
 
 interface FeedbackContextValue {
@@ -18,11 +17,11 @@ export function FeedbackProvider({
 }: {
   client: FeedbackClient;
   mode: NonNullable<FeedbackWidgetProps["mode"]>;
-  children: ReactNode;
+  children: unknown;
 }) {
   return (
     <FeedbackContext.Provider value={{ client, mode }}>
-      {children}
+      {children as React.ReactNode}
     </FeedbackContext.Provider>
   );
 }

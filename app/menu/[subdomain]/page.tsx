@@ -24,6 +24,7 @@ export default async function SubdomainMenuPage({ params }: PageProps) {
       instagram: true,
       contactNumber: true,
       logo: true,
+      googlePlacedId: true,
       customerDetailsPopupEnabled: true,
       categories: true,
       dishes: true,

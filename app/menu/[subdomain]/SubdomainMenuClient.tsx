@@ -55,6 +55,7 @@ interface RestaurantDetails {
   instagram: string;
   contactNumber: string;
   logo: string;
+  googlePlacedId?: string | null;
   customerDetailsPopupEnabled?: boolean;
   categories: Category[];
   dishes: Dish[];
@@ -89,8 +90,9 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
       name: menuData.restaurantName,
       logo: menuData.logo || undefined,
       location: menuData.location || undefined,
+      googlePlacedId: menuData.googlePlacedId ?? null,
     }),
-    [menuData.id, menuData.location, menuData.logo, menuData.restaurantName]
+    [menuData.googlePlacedId, menuData.id, menuData.location, menuData.logo, menuData.restaurantName]
   );
 
   const visibleGalleryImages = useMemo(() => galleryImages.slice(0, 3), [galleryImages]);

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import CategoryComponent from "@/components/CategoryBar";
 import DishesCard from "@/components/DishesCard";
 import axios from "axios";
-import { Search, ArrowBigDown } from "lucide-react";
+import { Search, ArrowBigDown, ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import AboutUsComponent from "@/components/about-us";
 import TabsComponent from "@/components/menu-navbar";
@@ -331,21 +331,21 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
 
       {showFeedbackFlow && (
         <div className="fixed inset-0 z-50 bg-white overflow-auto">
-          <div className="sticky top-0 z-10 flex justify-end border-b bg-white p-3">
-            <button
-              type="button"
-              onClick={() => setShowFeedbackFlow(false)}
-              className="rounded-md border px-3 py-1 text-sm font-medium"
-            >
-              Close
-            </button>
-          </div>
           <FeedbackWidget
             restaurantId={String(menuData.id)}
             restaurant={feedbackRestaurantDetails}
             apiBaseUrl={process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}
             mode="fullPage"
           />
+          <button
+            type="button"
+            onClick={() => setShowFeedbackFlow(false)}
+            className="fixed bottom-4 right-4 z-[60] inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-black/90"
+            aria-label="Go back to menu"
+          >
+            <ArrowLeft size={16} />
+            Go to menu
+          </button>
         </div>
       )}
       <BackToTop />

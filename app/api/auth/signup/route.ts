@@ -8,6 +8,8 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    const isProd = process.env.NODE_ENV === "production";
+    const sameSite: "lax" | "none" = isProd ? "none" : "lax";
     const body = await req.json();
 
     const { success } = signupSchema.safeParse(body);
@@ -50,16 +52,16 @@ export async function POST(req: NextRequest) {
       path: "/",
       maxAge: 30 * 24 * 60 * 60,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: isProd,
+      sameSite,
     });
 
     response.cookies.set("userId", user.id.toString(), { 
       path: "/",
-      sameSite: "strict",
+      sameSite,
       maxAge: 30 * 24 * 60 * 60,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProd,
     });
 
     return response;

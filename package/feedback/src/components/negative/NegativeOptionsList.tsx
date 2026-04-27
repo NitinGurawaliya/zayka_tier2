@@ -7,7 +7,6 @@ import {
   Sparkles,
   Users,
   UtensilsCrossed,
-  type LucideIcon,
 } from "lucide-react";
 import type { FeedbackTreeNode } from "../../types/internal";
 
@@ -16,7 +15,7 @@ interface NegativeOptionsListProps {
   onSelect: (node: FeedbackTreeNode) => void;
 }
 
-const TOP_LEVEL_ICON_MAP: Record<string, LucideIcon> = {
+const TOP_LEVEL_ICON_MAP: Record<string, unknown> = {
   "food-quality": UtensilsCrossed,
   "service-speed": Clock3,
   "staff-behavior": Users,
@@ -25,7 +24,7 @@ const TOP_LEVEL_ICON_MAP: Record<string, LucideIcon> = {
   "billing-value": Banknote,
 };
 
-const getNodeIcon = (nodeId: string): LucideIcon => {
+const getNodeIcon = (nodeId: string): unknown => {
   if (TOP_LEVEL_ICON_MAP[nodeId]) return TOP_LEVEL_ICON_MAP[nodeId];
   if (nodeId.includes("food")) return ChefHat;
   if (nodeId.includes("wait") || nodeId.includes("service")) return Clock3;
@@ -42,7 +41,7 @@ const OptionCard = ({
   node: FeedbackTreeNode;
   onSelect: (node: FeedbackTreeNode) => void;
 }) => {
-  const Icon = getNodeIcon(node.id);
+  const Icon = getNodeIcon(node.id) as any;
 
   return (
     <button

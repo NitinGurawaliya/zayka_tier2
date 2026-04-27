@@ -14,6 +14,7 @@ import BackToTop from "@/components/back-to-top";
 import AnnouncementList from "@/components/updates-section";
 import RegistrationPopup from "@/components/RegistrationPopup";
 import { useToast } from "@/components/ui/toast";
+import { FeedbackWidget, type RestaurantDetails as FeedbackRestaurantDetails } from "@nitin201/feedback-flow";
 
 interface GalleryImages {
   id: number;
@@ -79,8 +80,18 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
   const [isSliding, setIsSliding] = useState(true);
   const [showScrollText, setShowScrollText] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFeedbackFlow, setShowFeedbackFlow] = useState(false);
   const dishesContainerRef = useRef<HTMLDivElement>(null);
   const categoryBarRef = useRef<HTMLDivElement>(null);
+  const feedbackRestaurantDetails = useMemo<FeedbackRestaurantDetails>(
+    () => ({
+      id: menuData.id,
+      name: menuData.restaurantName,
+      logo: menuData.logo || undefined,
+      location: menuData.location || undefined,
+    }),
+    [menuData.id, menuData.location, menuData.logo, menuData.restaurantName]
+  );
 
   const visibleGalleryImages = useMemo(() => galleryImages.slice(0, 3), [galleryImages]);
   const sliderImages = useMemo(() => {
@@ -228,6 +239,8 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
           id={menuData.id}
           showUserIcon={true}
           feedbackButtonVariant="black"
+          showFeedbackButton={true}
+          onFeedbackClick={() => setShowFeedbackFlow(true)}
         />
       )}
       {/* Gallery Image Slider */}
@@ -315,6 +328,26 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
       )}
       {/* Registration Popup (only for unregistered users) */}
       {showRegistrationPopup && <RegistrationPopup restaurantId={menuData?.id} />}
+
+      {showFeedbackFlow && (
+        <div className="fixed inset-0 z-50 bg-white overflow-auto">
+          <div className="sticky top-0 z-10 flex justify-end border-b bg-white p-3">
+            <button
+              type="button"
+              onClick={() => setShowFeedbackFlow(false)}
+              className="rounded-md border px-3 py-1 text-sm font-medium"
+            >
+              Close
+            </button>
+          </div>
+          <FeedbackWidget
+            restaurantId={String(menuData.id)}
+            restaurant={feedbackRestaurantDetails}
+            apiBaseUrl={process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}
+            mode="fullPage"
+          />
+        </div>
+      )}
       <BackToTop />
     </div>
   );

@@ -27,7 +27,7 @@ export default function SignupComponent({ backendUrl }: SignupComponentProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch(buildApiUrl("/api/auth/check"), {
+        const response = await fetch(buildApiUrl("/auth/check"), {
           credentials: "include",
         });
         
@@ -83,7 +83,7 @@ export default function SignupComponent({ backendUrl }: SignupComponentProps) {
       setSuccess("");
 
       const res = await axios.post(
-        buildApiUrl("/api/auth/signup"),
+        buildApiUrl("/auth/signup"),
         {
           name: name.trim(),
           password,

@@ -17,7 +17,7 @@ function SigninComponent({ backendUrl }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch(buildApiUrl("/api/auth/check"), {
+        const response = await fetch(buildApiUrl("/auth/check"), {
           credentials: "include"
         });
         if (response.ok) {
@@ -39,7 +39,7 @@ function SigninComponent({ backendUrl }) {
       setLoading(true);
       setError("");
       const res = await axios.post(
-        buildApiUrl("/api/auth/signin"),
+        buildApiUrl("/auth/signin"),
         { email, password },
         { withCredentials: true }
       );
@@ -149,7 +149,7 @@ function SignupComponent({ backendUrl }) {
   useEffect2(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch(buildApiUrl("/api/auth/check"), {
+        const response = await fetch(buildApiUrl("/auth/check"), {
           credentials: "include"
         });
         if (response.ok) {
@@ -193,7 +193,7 @@ function SignupComponent({ backendUrl }) {
       setErrors({});
       setSuccess("");
       const res = await axios2.post(
-        buildApiUrl("/api/auth/signup"),
+        buildApiUrl("/auth/signup"),
         {
           name: name.trim(),
           password,

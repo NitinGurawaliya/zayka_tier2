@@ -24,7 +24,7 @@ export default function SigninComponent({ backendUrl }: SigninComponentProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch(buildApiUrl("/api/auth/check"), {
+        const response = await fetch(buildApiUrl("/auth/check"), {
           credentials: "include",
         });
         
@@ -53,7 +53,7 @@ export default function SigninComponent({ backendUrl }: SigninComponentProps) {
       setError("");
 
       const res = await axios.post(
-        buildApiUrl("/api/auth/signin"),
+        buildApiUrl("/auth/signin"),
         { email, password },
         { withCredentials: true }
       );

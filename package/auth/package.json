@@ -1,13 +1,13 @@
 {
   "name": "@nitin201/zayka-auth",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "Zayka Auth",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "types": "dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     }

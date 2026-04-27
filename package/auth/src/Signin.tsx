@@ -6,9 +6,10 @@ import axios from "axios";
 
 interface SigninComponentProps {
   backendUrl: string;
+  redirectUrl?: string;
 }
 
-export default function SigninComponent({ backendUrl }: SigninComponentProps) {
+export default function SigninComponent({ backendUrl, redirectUrl }: SigninComponentProps) {
   const normalizedBackendUrl = backendUrl.replace(/\/+$/, "");
   const buildApiUrl = (path: string) => `${normalizedBackendUrl}${path}`;
 
@@ -19,6 +20,8 @@ export default function SigninComponent({ backendUrl }: SigninComponentProps) {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  const getRedirectTarget = () =>
+    searchParams.get("redirect") || redirectUrl || "/restaurant/dashboard";
 
   // Check if user is already authenticated on component mount
   useEffect(() => {
@@ -30,8 +33,7 @@ export default function SigninComponent({ backendUrl }: SigninComponentProps) {
         
         if (response.ok) {
           // User is already authenticated, redirect to dashboard or intended page
-          const redirectTo = searchParams.get("redirect") || "/restaurant/dashboard";
-          router.push(redirectTo);
+          router.push(getRedirectTarget());
         }
       } catch (error) {
         // User is not authenticated, stay on signin page
@@ -40,7 +42,7 @@ export default function SigninComponent({ backendUrl }: SigninComponentProps) {
     };
 
     checkAuth();
-  }, [router, searchParams, backendUrl]);
+  }, [router, searchParams, backendUrl, redirectUrl]);
 
   async function signinHandler() {
     if (!email || !password) {
@@ -62,8 +64,7 @@ export default function SigninComponent({ backendUrl }: SigninComponentProps) {
       console.log("Signed in successfully:", token);
 
       // Redirect to intended page or dashboard
-      const redirectTo = searchParams.get("redirect") || "/restaurant/dashboard";
-      router.push(redirectTo);
+      router.push(getRedirectTarget());
     } catch (error: any) {
       console.error("Signin failed:", error);
       if (error.response?.data?.msg) {

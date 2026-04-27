@@ -2,8 +2,9 @@ import * as react_jsx_runtime from 'react/jsx-runtime';
 
 interface SigninComponentProps {
     backendUrl: string;
+    redirectUrl?: string;
 }
-declare function SigninComponent({ backendUrl }: SigninComponentProps): react_jsx_runtime.JSX.Element;
+declare function SigninComponent({ backendUrl, redirectUrl }: SigninComponentProps): react_jsx_runtime.JSX.Element;
 
 interface SignupComponentProps {
     backendUrl: string;

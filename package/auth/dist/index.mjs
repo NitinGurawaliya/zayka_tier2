@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { jsx, jsxs } from "react/jsx-runtime";
-function SigninComponent({ backendUrl }) {
+function SigninComponent({ backendUrl, redirectUrl }) {
   const normalizedBackendUrl = backendUrl.replace(/\/+$/, "");
   const buildApiUrl = (path) => `${normalizedBackendUrl}${path}`;
   const [email, setEmail] = useState("");
@@ -14,6 +14,7 @@ function SigninComponent({ backendUrl }) {
   const [error, setError] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const getRedirectTarget = () => searchParams.get("redirect") || redirectUrl || "/restaurant/dashboard";
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -21,15 +22,14 @@ function SigninComponent({ backendUrl }) {
           credentials: "include"
         });
         if (response.ok) {
-          const redirectTo = searchParams.get("redirect") || "/restaurant/dashboard";
-          router.push(redirectTo);
+          router.push(getRedirectTarget());
         }
       } catch (error2) {
         console.log("User not authenticated");
       }
     };
     checkAuth();
-  }, [router, searchParams, backendUrl]);
+  }, [router, searchParams, backendUrl, redirectUrl]);
   async function signinHandler() {
     if (!email || !password) {
       setError("Please fill in all fields");
@@ -45,8 +45,7 @@ function SigninComponent({ backendUrl }) {
       );
       const token = res.data.token;
       console.log("Signed in successfully:", token);
-      const redirectTo = searchParams.get("redirect") || "/restaurant/dashboard";
-      router.push(redirectTo);
+      router.push(getRedirectTarget());
     } catch (error2) {
       console.error("Signin failed:", error2);
       if (error2.response?.data?.msg) {

@@ -1,6 +1,7 @@
 import type { RestaurantDetails } from './RestaurantMenuClient';
 
 export const revalidate = 60 * 60 * 24; 
+export const dynamic = "force-dynamic";
 
 import RestaurantMenuClient from './RestaurantMenuClient';
 import { cookies } from 'next/headers';

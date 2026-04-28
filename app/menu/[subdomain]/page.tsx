@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 export const revalidate = 60 * 60 * 24;
+export const dynamic = "force-dynamic";
 
 interface PageProps { 
   params: { subdomain: string };

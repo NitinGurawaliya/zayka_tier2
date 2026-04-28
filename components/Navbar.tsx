@@ -112,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
 
           {/* here after user clicks on icon show modal mob no and name that user submitted on auth */}
-        {showUserIcon && (
+        {/* {showUserIcon && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        )} */}
       </div>
     </div>
   </nav>

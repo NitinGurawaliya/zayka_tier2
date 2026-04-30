@@ -4,7 +4,6 @@
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UserIcon } from "lucide-react";
-import FeedbackDialog from "@/components/FeedbackDialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,14 +21,17 @@ interface NavbarProps {
   logo: string;
   showUserIcon?: boolean;
   feedbackButtonVariant?: "outline" | "black";
+  showFeedbackButton?: boolean;
+  onFeedbackClick?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  id,
   restaurantName,
   logo,
   showUserIcon = true,
   feedbackButtonVariant = "outline",
+  showFeedbackButton = false,
+  onFeedbackClick,
 }) => {
   const [customerInfo, setCustomerInfo] = useState<{ name: string; mobile: string } | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
@@ -93,26 +95,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         <span className="text-xl font-semibold dark:text-white">{restaurantName}</span>
       </div>
       <div className="flex items-center gap-2">
-        {/* {typeof id === "number" && (
-          <FeedbackDialog
-            restaurantId={id}
-            restaurantName={restaurantName}
-            trigger={
-              feedbackButtonVariant === "black" ? (
-                <Button size="sm" className="bg-black text-white hover:bg-black/90">
-                  Feedback
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm">
-                  Feedback
-                </Button>
-              )
-            }
-          />
-        )} */}
+        {showFeedbackButton && (
+          feedbackButtonVariant === "black" ? (
+            <Button
+              size="sm"
+              className="bg-black text-white hover:bg-black/90"
+              onClick={onFeedbackClick}
+            >
+              Feedback
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={onFeedbackClick}>
+              Feedback
+            </Button>
+          )
+        )}
 
           {/* here after user clicks on icon show modal mob no and name that user submitted on auth */}
-        {showUserIcon && (
+        {/* {showUserIcon && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        )} */}
       </div>
     </div>
   </nav>

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 export const revalidate = 60 * 60 * 24;
+export const dynamic = "force-dynamic";
 
 interface PageProps { 
   params: { subdomain: string };
@@ -24,6 +25,7 @@ export default async function SubdomainMenuPage({ params }: PageProps) {
       instagram: true,
       contactNumber: true,
       logo: true,
+      googlePlacedId: true,
       customerDetailsPopupEnabled: true,
       categories: true,
       dishes: true,

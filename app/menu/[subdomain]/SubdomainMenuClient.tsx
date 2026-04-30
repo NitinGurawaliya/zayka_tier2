@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import CategoryComponent from "@/components/CategoryBar";
 import DishesCard from "@/components/DishesCard";
 import axios from "axios";
-import { Search, ArrowBigDown } from "lucide-react";
+import { Search, ArrowBigDown, ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import AboutUsComponent from "@/components/about-us";
 import TabsComponent from "@/components/menu-navbar";
@@ -14,6 +14,7 @@ import BackToTop from "@/components/back-to-top";
 import AnnouncementList from "@/components/updates-section";
 import RegistrationPopup from "@/components/RegistrationPopup";
 import { useToast } from "@/components/ui/toast";
+import { FeedbackWidget, type RestaurantDetails as FeedbackRestaurantDetails } from "@nitin201/feedback-flow";
 
 interface GalleryImages {
   id: number;
@@ -54,6 +55,7 @@ interface RestaurantDetails {
   instagram: string;
   contactNumber: string;
   logo: string;
+  googlePlacedId?: string | null;
   customerDetailsPopupEnabled?: boolean;
   categories: Category[];
   dishes: Dish[];
@@ -79,8 +81,19 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
   const [isSliding, setIsSliding] = useState(true);
   const [showScrollText, setShowScrollText] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFeedbackFlow, setShowFeedbackFlow] = useState(false);
   const dishesContainerRef = useRef<HTMLDivElement>(null);
   const categoryBarRef = useRef<HTMLDivElement>(null);
+  const feedbackRestaurantDetails = useMemo<FeedbackRestaurantDetails>(
+    () => ({
+      id: menuData.id,
+      name: menuData.restaurantName,
+      logo: menuData.logo || undefined,
+      location: menuData.location || undefined,
+      googlePlacedId: menuData.googlePlacedId ?? null,
+    }),
+    [menuData.googlePlacedId, menuData.id, menuData.location, menuData.logo, menuData.restaurantName]
+  );
 
   const visibleGalleryImages = useMemo(() => galleryImages.slice(0, 3), [galleryImages]);
   const sliderImages = useMemo(() => {
@@ -228,6 +241,8 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
           id={menuData.id}
           showUserIcon={true}
           feedbackButtonVariant="black"
+          showFeedbackButton={true}
+          onFeedbackClick={() => setShowFeedbackFlow(true)}
         />
       )}
       {/* Gallery Image Slider */}
@@ -315,6 +330,26 @@ export default function SubdomainMenuClient({ menuData, showRegistrationPopup }:
       )}
       {/* Registration Popup (only for unregistered users) */}
       {showRegistrationPopup && <RegistrationPopup restaurantId={menuData?.id} />}
+
+      {showFeedbackFlow && (
+        <div className="fixed inset-0 z-50 bg-white overflow-auto">
+          <FeedbackWidget
+            restaurantId={String(menuData.id)}
+            restaurant={feedbackRestaurantDetails}
+            apiBaseUrl={process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}
+            mode="fullPage"
+          />
+          <button
+            type="button"
+            onClick={() => setShowFeedbackFlow(false)}
+            className="fixed bottom-4 right-4 z-[60] inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-black/90"
+            aria-label="Go back to menu"
+          >
+            <ArrowLeft size={16} />
+            Go to menu
+          </button>
+        </div>
+      )}
       <BackToTop />
     </div>
   );
